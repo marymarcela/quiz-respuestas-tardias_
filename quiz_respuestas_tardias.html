@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Respuestas Tardías</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #F0F4F8;
+    color: #1E293B;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2rem;
+    max-width: 680px;
+    width: 100%;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #021B35;
+    margin-bottom: 4px;
+  }
+
+  header p {
+    font-size: 14px;
+    color: #64748B;
+  }
+
+  .quiz-wrap {
+    max-width: 680px;
+    width: 100%;
+  }
+
+  .progress-bar-bg {
+    height: 5px;
+    background: #CBD5E1;
+    border-radius: 3px;
+    margin-bottom: 1.25rem;
+  }
+
+  .progress-bar-fill {
+    height: 5px;
+    background: #1D9E75;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .q-counter { font-size: 13px; color: #64748B; }
+
+  .score-badge {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748B;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 4px 12px;
+  }
+
+  .question-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .q-tag {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #0F6E56;
+    background: #E1F5EE;
+    border-radius: 6px;
+    padding: 3px 10px;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+
+  .q-text {
+    font-size: 17px;
+    color: #1E293B;
+    line-height: 1.65;
+    font-weight: 500;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 1.25rem;
+  }
+
+  .opt-btn {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-size: 15px;
+    color: #1E293B;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: background 0.15s, border-color 0.15s;
+    line-height: 1.5;
+    width: 100%;
+  }
+
+  .opt-btn:hover:not(:disabled) {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+  }
+
+  .opt-btn:disabled { cursor: default; }
+
+  .opt-letter {
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 22px;
+    color: #94A3B8;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .opt-btn.correct { background: #E1F5EE; border-color: #1D9E75; }
+  .opt-btn.correct .opt-letter { color: #0F6E56; }
+  .opt-btn.wrong { background: #FCEBEB; border-color: #E24B4A; }
+  .opt-btn.wrong .opt-letter { color: #A32D2D; }
+  .opt-btn.show-correct { background: #E1F5EE; border-color: #1D9E75; opacity: 0.75; }
+
+  .feedback-box {
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    margin-top: 1.1rem;
+    font-size: 14px;
+    line-height: 1.65;
+    display: none;
+  }
+
+  .feedback-box.correct {
+    background: #E1F5EE;
+    color: #085041;
+    border-left: 4px solid #1D9E75;
+  }
+
+  .feedback-box.wrong {
+    background: #FCEBEB;
+    color: #501313;
+    border-left: 4px solid #E24B4A;
+  }
+
+  .feedback-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+
+  .next-btn {
+    background: #065A82;
+    border: none;
+    border-radius: 10px;
+    padding: 0.65rem 1.5rem;
+    font-size: 15px;
+    color: #FFFFFF;
+    cursor: pointer;
+    display: none;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+
+  .next-btn:hover { background: #021B35; }
+
+  .result-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    display: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .result-title { font-size: 15px; color: #64748B; margin-bottom: 0.5rem; }
+  .result-score { font-size: 56px; font-weight: 700; color: #1D9E75; margin: 0.5rem 0; }
+  .result-label { font-size: 14px; color: #64748B; margin-bottom: 1.75rem; }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.75rem;
+  }
+
+  .metric {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 1rem 0.75rem;
+  }
+
+  .metric-val { font-size: 24px; font-weight: 600; color: #1E293B; }
+  .metric-lbl { font-size: 12px; color: #64748B; margin-top: 3px; }
+
+  .result-msg {
+    font-size: 15px;
+    color: #334155;
+    margin-bottom: 1.75rem;
+    line-height: 1.65;
+    background: #F8FAFC;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    text-align: left;
+  }
+
+  .restart-btn {
+    background: #065A82;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-size: 15px;
+    font-weight: 500;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .restart-btn:hover { background: #021B35; }
+
+  footer {
+    margin-top: 2rem;
+    font-size: 12px;
+    color: #94A3B8;
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.75rem; }
+    .question-card { padding: 1.25rem; }
+    .q-text { font-size: 15px; }
+    .opt-btn { font-size: 14px; }
+    .result-score { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Respuestas Tardías en Neurofisiología Clínica</h1>
+  <p>Onda F · Reflejo H · Onda A · Posgrado en Neurología</p>
+</header>
+
+<div class="quiz-wrap">
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog"></div></div>
+  <div class="top-row">
+    <span class="q-counter" id="q-counter">Pregunta 1 de 14</span>
+    <span class="score-badge" id="score-badge">Correctas: 0</span>
+  </div>
+
+  <div id="quiz-body">
+    <div class="question-card">
+      <div class="q-tag" id="q-tag"></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback-box" id="feedback"></div>
+    </div>
+    <div class="nav-row"><button class="next-btn" id="next-btn">Siguiente</button></div>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-title">Resultado final</div>
+    <div class="result-score" id="r-score"></div>
+    <div class="result-label" id="r-label"></div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-val" id="m-correct"></div><div class="metric-lbl">Correctas</div></div>
+      <div class="metric"><div class="metric-val" id="m-wrong"></div><div class="metric-lbl">Incorrectas</div></div>
+      <div class="metric"><div class="metric-val" id="m-pct"></div><div class="metric-lbl">Porcentaje</div></div>
+    </div>
+    <div class="result-msg" id="r-msg"></div>
+    <button class="restart-btn" onclick="restart()">Reiniciar quiz</button>
+  </div>
+</div>
+
+<footer>Neurofisiología Clínica · Posgrado · Mary Marcela Araujo Chumacero</footer>
+
+<script>
+const questions = [
+  {
+    tag: "Onda F — Mecanismo",
+    q: "¿Cuál es el mecanismo correcto de generación de la onda F?",
+    opts: ["Activación ortodrómica de fibras Ia que sinaptan con motoneuronas alfa","Descarga antidrópica que llega a la motoneurona alfa y genera un segundo potencial ortodrómico","Reflejo monosináptico activado por estímulo submáximo","Reexcitación de una colateral axonal sin participación de la médula"],
+    correct: 1,
+    explanation: "La onda F se genera cuando el impulso antidrómico llega al soma de la motoneurona alfa y aproximadamente el 1-5% de ellas alcanzan el umbral y se disparan de nuevo en sentido ortodrómico hacia el músculo. No es un reflejo: no involucra fibras sensitivas ni sinapsis."
+  },
+  {
+    tag: "Onda F — Características",
+    q: "¿Por qué la onda F varía en morfología y latencia con cada estímulo?",
+    opts: ["Porque la temperatura del nervio cambia con cada estímulo","Porque en cada estímulo se activa un grupo diferente de motoneuronas con velocidades distintas","Porque el estímulo supramáximo activa diferentes fibras sensitivas","Porque la amplitud del PAMC cambia con la frecuencia de estimulación"],
+    correct: 1,
+    explanation: "En cada estímulo, una fracción diferente del pool de motoneuronas alfa alcanza el umbral y se dispara de regreso. Como cada motoneurona tiene su propio axón con su propia velocidad de conducción, la latencia y morfología varían. Esta es la firma diagnóstica de la onda F."
+  },
+  {
+    tag: "Onda F — Parámetros",
+    q: "¿Cuál es el valor normal de la latencia mínima de la onda F en miembros inferiores (estimulación en tobillo)?",
+    opts: ["25–32 ms","15–20 ms","45–56 ms","60–70 ms"],
+    correct: 2,
+    explanation: "En miembros inferiores la latencia mínima normal es 45–56 ms, porque la distancia hasta la médula espinal es considerablemente mayor que en miembros superiores. En MMSS el valor es 25–32 ms."
+  },
+  {
+    tag: "Onda F — Parámetros",
+    q: "Una onda F con latencia normal, amplitud normal, pero persistencia del 30% con 10 estímulos. ¿Qué sugiere?",
+    opts: ["Compromiso axonal puro","Estudio normal: la persistencia del 30% es aceptable","Bloqueo de conducción proximal o desmielinización que impide que muchas motoneuronas alcancen el umbral","Miopatía con pérdida de fibras musculares"],
+    correct: 2,
+    explanation: "La persistencia normal es >50% con 10 estímulos. Un 30% indica que pocas motoneuronas se están re-disparando. Esto puede verse en bloqueos de conducción proximal o en desmielinización grave. La latencia normal descarta enlentecimiento significativo en las fibras que sí responden."
+  },
+  {
+    tag: "Onda F — Técnica",
+    q: "¿Por qué la frecuencia de estimulación para la onda F debe ser ≤ 0.5 Hz?",
+    opts: ["Para evitar el dolor por estimulación repetida","Para que la onda M no se superponga a la onda F","Para evitar la fatiga de motoneuronas que suprimiría la onda F con frecuencias altas","Porque el equipo no puede procesar estímulos más frecuentes"],
+    correct: 2,
+    explanation: "Frecuencias de estimulación > 0.5 Hz producen fatiga del pool de motoneuronas, disminuyendo la probabilidad de que alcancen el umbral y generen la onda F. Esto reduce artificialmente la persistencia."
+  },
+  {
+    tag: "Reflejo H — Mecanismo",
+    q: "¿Cuál es la diferencia fundamental entre el reflejo H y la onda F?",
+    opts: ["El reflejo H es antidrómico y la onda F es ortodrómica","El reflejo H tiene vía aferente sensitiva (fibras Ia) y sinapsis medular; la onda F es puramente motora","El reflejo H requiere estímulo supramáximo y la onda F submáximo","El reflejo H solo se registra en miembros superiores"],
+    correct: 1,
+    explanation: "El reflejo H es un verdadero reflejo monosináptico: el impulso viaja por fibras Ia aferentes hasta la médula, sinaptan con motoneuronas alfa, y el impulso regresa en sentido eferente. La onda F no tiene componente sensitivo ni sinapsis: es puramente antidrómico-motor."
+  },
+  {
+    tag: "Reflejo H — Técnica",
+    q: "¿Por qué el reflejo H desaparece cuando se aumenta la intensidad del estímulo a supramáximo?",
+    opts: ["Porque se activan fibras inhibitorias que bloquean la respuesta","Porque el impulso antidrómico por fibras motoras colisiona y cancela el impulso aferente Ia ortodrómico","Porque el músculo se fatiga con estímulos intensos","Porque la ganancia del equipo satura con estímulos supramáximos"],
+    correct: 1,
+    explanation: "Con estimulación supramáxima, el impulso antidrómico que viaja por las fibras motoras colisiona con el impulso aferente ortodrómico que venía de las fibras Ia. Se produce cancelación antidrómica y el reflejo H desaparece. La onda F, que solo usa la vía motora, no sufre esta cancelación."
+  },
+  {
+    tag: "Reflejo H — Clínica",
+    q: "¿Cuál es el valor de diferencia interlado del reflejo H tibial que se considera patológico?",
+    opts: ["> 0.5 ms","> 1.5 ms","> 3 ms","> 5 ms"],
+    correct: 1,
+    explanation: "Una asimetría interlado > 1.5 ms en la latencia del reflejo H tibial se considera patológica. La comparación contralateral es más sensible que el valor absoluto porque elimina variables confundidoras como talla, temperatura y edad."
+  },
+  {
+    tag: "Reflejo H — Clínica",
+    q: "Paciente con dolor lumbar irradiado a región posterior de pierna y pie derecho. ¿Cuál es la herramienta electrofisiológica más sensible para evaluar la raíz S1?",
+    opts: ["Onda F del nervio peroneo","Reflejo H del nervio tibial (sóleo)","Latencia motora distal del nervio tibial","Conducción sensitiva del nervio sural"],
+    correct: 1,
+    explanation: "El reflejo H tibial es la herramienta más sensible para evaluar la raíz S1. Evalúa todo el arco reflejo desde las fibras Ia hasta la motoneurona alfa de S1. La asimetría unilateral o ausencia es el hallazgo más específico en radiculopatía S1."
+  },
+  {
+    tag: "Onda A",
+    q: "¿Cuál es la característica que DEFINE a la onda A y la diferencia de la onda F?",
+    opts: ["Aparece antes que la onda M en el trazado","Morfología y latencia constantes en cada estímulo sucesivo","Solo aparece en nervios desmielinizados","Requiere estímulo submáximo para elicitarse"],
+    correct: 1,
+    explanation: "La constancia de morfología y latencia es la firma diagnóstica de la onda A. Aparece entre la onda M y la onda F (respuesta intermedia). La onda F varía porque activa diferentes motoneuronas en cada estímulo; la onda A siempre activa la misma colateral axonal."
+  },
+  {
+    tag: "Patrones diagnósticos",
+    q: "PAMC normal + persistencia normal + latencia F prolongada. ¿Qué patrón sugiere?",
+    opts: ["Compromiso axonal puro","Miopatía","Desmielinización proximal sin pérdida axonal significativa","Estudio normal"],
+    correct: 2,
+    explanation: "Este es el patrón clásico de desmielinización: la latencia se prolonga porque el impulso viaja más lento, pero el PAMC es normal porque no hay pérdida axonal. La persistencia se mantiene porque los axones, aunque lentos, aún llegan a la médula y regresan."
+  },
+  {
+    tag: "Patrones diagnósticos",
+    q: "PAMC de amplitud disminuida + persistencia > 50% + latencia F normal. Este patrón puede corresponder a:",
+    opts: ["Desmielinización grave con bloqueo de conducción","Compromiso axonal O miopatía — no se distinguen por la onda F sola","Radiculopatía aguda","GBS en fase temprana"],
+    correct: 1,
+    explanation: "Tanto el compromiso axonal como la miopatía generan este patrón. La distinción requiere el EMG de aguja y la clínica: en axonal hay denervación; en miopatía los potenciales son de baja amplitud y corta duración."
+  },
+  {
+    tag: "F estimada — Fórmula",
+    q: "En la fórmula F estimada = 2X + Y + Z, ¿qué representa el factor '2' en '2X'?",
+    opts: ["Un factor de corrección estadístico para la variabilidad de motoneuronas","El doble del tiempo porque el impulso viaja de ida (antidrómico) y vuelta (ortodrómico) por el mismo segmento proximal","La diferencia entre conducción proximal y distal","El tiempo de dos sinapsis en el asta anterior"],
+    correct: 1,
+    explanation: "X es el tiempo desde el punto de estimulación hasta la médula (un solo trayecto). El impulso antidrómico hace ese recorrido para llegar a la médula, y el impulso ortodrómico recorre exactamente el mismo segmento para regresar. Por eso se multiplica por 2."
+  },
+  {
+    tag: "Kimura — Medición",
+    q: "Según Kimura, al medir la distancia para calcular la F estimada en miembros inferiores, ¿cuál es el recorrido correcto?",
+    opts: ["Línea recta desde el tobillo hasta L1","Tobillo → rodilla → trocánter mayor → T12","Tobillo → cresta ilíaca → ombligo","Tobillo → ingle → L4"],
+    correct: 1,
+    explanation: "Kimura especifica que la medición sigue el trayecto anatómico del nervio sobre la superficie: punto de estimulación → rodilla (cara posterior) → trocánter mayor → apófisis espinosa de T12. Usa T12, no L1, y sigue el nervio, no una línea recta."
+  }
+];
+
+let current = 0, score = 0, answered = false;
+
+function render() {
+  const q = questions[current];
+  document.getElementById('prog').style.width = (((current) / questions.length) * 100) + '%';
+  document.getElementById('q-counter').textContent = 'Pregunta ' + (current + 1) + ' de ' + questions.length;
+  document.getElementById('score-badge').textContent = 'Correctas: ' + score;
+  document.getElementById('q-tag').textContent = q.tag;
+  document.getElementById('q-text').textContent = q.q;
+  const letters = ['A','B','C','D'];
+  const optDiv = document.getElementById('options');
+  optDiv.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = '<span class="opt-letter">' + letters[i] + '</span><span>' + opt + '</span>';
+    btn.onclick = () => selectAnswer(i);
+    optDiv.appendChild(btn);
+  });
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'none';
+  fb.className = 'feedback-box';
+  document.getElementById('next-btn').style.display = 'none';
+  answered = false;
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b => b.disabled = true);
+  const isCorrect = idx === q.correct;
+  if (isCorrect) { btns[idx].classList.add('correct'); score++; }
+  else { btns[idx].classList.add('wrong'); btns[q.correct].classList.add('show-correct'); }
+  document.getElementById('score-badge').textContent = 'Correctas: ' + score;
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-box ' + (isCorrect ? 'correct' : 'wrong');
+  fb.style.display = 'block';
+  fb.innerHTML = '<div class="feedback-label">' + (isCorrect ? '✓ Correcto' : '✗ Incorrecto') + '</div>' + q.explanation;
+  const nb = document.getElementById('next-btn');
+  nb.style.display = 'block';
+  nb.textContent = current < questions.length - 1 ? 'Siguiente →' : 'Ver resultado';
+}
+
+document.getElementById('next-btn').onclick = () => {
+  current++;
+  if (current >= questions.length) showResult();
+  else render();
+};
+
+function showResult() {
+  document.getElementById('quiz-body').style.display = 'none';
+  document.getElementById('result-card').style.display = 'block';
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('r-score').textContent = pct + '%';
+  document.getElementById('r-label').textContent = score + ' de ' + questions.length + ' correctas';
+  document.getElementById('m-correct').textContent = score;
+  document.getElementById('m-wrong').textContent = questions.length - score;
+  document.getElementById('m-pct').textContent = pct + '%';
+  let msg = '';
+  if (pct >= 90) msg = 'Excelente dominio del tema. Tienes una comprensión sólida de las respuestas tardías, sus mecanismos, parámetros y aplicación clínica.';
+  else if (pct >= 70) msg = 'Buen nivel. Repasa los conceptos donde tuviste dificultad, especialmente los patrones diagnósticos y la diferencia entre onda F y reflejo H.';
+  else if (pct >= 50) msg = 'Nivel intermedio. Te recomiendo revisar los mecanismos de generación, los valores normales y los patrones electrofisiológicos en patología.';
+  else msg = 'Hay conceptos fundamentales que reforzar. Revisa el mecanismo de la onda F, el reflejo H, la onda A y los patrones diagnósticos de desmielinización vs axonal.';
+  document.getElementById('r-msg').textContent = msg;
+  document.getElementById('prog').style.width = '100%';
+}
+
+function restart() {
+  current = 0; score = 0; answered = false;
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('quiz-body').style.display = 'block';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
